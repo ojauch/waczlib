@@ -1,7 +1,6 @@
 import pytest
 
-from datetime import datetime
-
+from waczlib.helpers import parse_iso_8601_date
 from waczlib.wacz import WaczArchive, InvalidWaczError
 
 
@@ -57,8 +56,8 @@ def test_get_metadata():
     assert metadata.wacz_version == '1.1.1'
     assert metadata.title == 'valid-example'
     assert metadata.software == 'Webrecorder ArchiveWeb.page 0.10.1, using warcio.js 2.1.0'
-    assert metadata.created == datetime.fromisoformat('2023-07-04T12:25:53.900Z')
-    assert metadata.modified == datetime.fromisoformat('2023-07-04T12:26:05.132Z')
+    assert metadata.created == parse_iso_8601_date('2023-07-04T12:25:53.900Z')
+    assert metadata.modified == parse_iso_8601_date('2023-07-04T12:26:05.132Z')
 
 
 def test_get_metadata_invalid():
