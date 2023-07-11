@@ -31,7 +31,7 @@ class WaczArchive:
             if 'wacz_version' not in datapackage:
                 raise InvalidWaczError("wacz_version must be set")
 
-            if 'resources' not in datapackage or type(datapackage['resources']) != list \
+            if 'resources' not in datapackage or type(datapackage['resources']) is not list \
                     or len(datapackage['resources']) == 0:
                 raise InvalidWaczError("resources must be set to an non empty array")
 
