@@ -7,6 +7,8 @@ from typing import Optional, Dict, Generator
 from contextlib import contextmanager
 from zipfile import ZipFile
 
+from waczlib.helpers import parse_iso_8601_date
+
 
 class WaczArchive:
     def __init__(self, path: str) -> None:
@@ -66,21 +68,21 @@ class WaczArchive:
         created = None
         if 'created' in datapackage:
             try:
-                created = datetime.fromisoformat(datapackage['created'])
+                created = parse_iso_8601_date(datapackage['created'])
             except ValueError:
                 raise InvalidWaczError('created must be an iso date time string')
 
         modified = None
         if 'modified' in datapackage:
             try:
-                modified = datetime.fromisoformat(datapackage['modified'])
+                modified = parse_iso_8601_date(datapackage['modified'])
             except ValueError:
                 raise InvalidWaczError('modified must be an iso date time string')
 
         main_page_date = None
         if 'main_page_date' in datapackage:
             try:
-                main_page_date = datetime.fromisoformat(datapackage['main_page_date'])
+                main_page_date = parse_iso_8601_date(datapackage['main_page_date'])
             except ValueError:
                 raise InvalidWaczError('main_page_date must be an iso date time string')
 
