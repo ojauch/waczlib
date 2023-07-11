@@ -53,6 +53,8 @@ class WaczArchive:
             if 'pages/pages.jsonl' not in files:
                 raise InvalidWaczError('Does not contain pages/pages.jsonl')
 
+            self._validate_pages(zip_file)
+
     def verify_checksums(self) -> Dict[str, bool]:
         """
         Check if the checksums of the files in the archive match with the checksums in the datapackage
@@ -77,6 +79,21 @@ class WaczArchive:
             yield zip_file
         finally:
             zip_file.close()
+
+    @staticmethod
+    def _validate_pages(zip_file: ZipFile):
+        with zip_file.open('pages/pages.jsonl', 'r') as pages_file:
+            for idx, line in enumerate(pages_file.readlines()):
+                if idx == 0:
+                    continue
+
+                pages = json.loads(line)
+
+                if 'url' not in pages:
+                    raise InvalidWaczError('page does not contain url property')
+
+                if 'ts' not in pages:
+                    raise InvalidWaczError('page does not contain ts property')
 
 
 @dataclass

@@ -39,3 +39,10 @@ def test_validate_no_pages():
     with pytest.raises(InvalidWaczError) as e_info:
         archive.validate()
     assert e_info.value.reason == "Does not contain pages/pages.jsonl"
+
+
+def test_validate_invalid_pages():
+    archive = WaczArchive("test_assets/invalid-pages.wacz")
+    with pytest.raises(InvalidWaczError) as e_info:
+        archive.validate()
+    assert e_info.value.reason == "page does not contain url property"
