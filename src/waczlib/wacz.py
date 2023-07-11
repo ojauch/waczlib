@@ -25,16 +25,6 @@ class WaczArchive:
 
             datapackage = self._get_datapackage()
 
-            if 'profile' not in datapackage or datapackage['profile'] != 'data-package':
-                raise InvalidWaczError("profile must be set to 'data-package'")
-
-            if 'wacz_version' not in datapackage:
-                raise InvalidWaczError("wacz_version must be set")
-
-            if 'resources' not in datapackage or not isinstance(datapackage['resources'], list) \
-                    or not datapackage['resources']:
-                raise InvalidWaczError("resources must be set to an non empty array")
-
             archive_regex = re.compile(r'archive/.+\.warc(\.gz)?')
             archive_files = [file for file in files if archive_regex.fullmatch(file)]
             if len(archive_files) == 0:
@@ -116,9 +106,20 @@ class WaczArchive:
             with zip_file.open('datapackage.json') as datapackage_file:
                 try:
                     datapackage = json.load(datapackage_file)
-                    return datapackage
                 except json.JSONDecodeError:
                     raise InvalidWaczError("datapackage.json is not a valid JSON file")
+
+            if 'profile' not in datapackage or datapackage['profile'] != 'data-package':
+                raise InvalidWaczError("profile must be set to 'data-package'")
+
+            if 'wacz_version' not in datapackage:
+                raise InvalidWaczError("wacz_version must be set")
+
+            if 'resources' not in datapackage or not isinstance(datapackage['resources'], list) \
+                    or not datapackage['resources']:
+                raise InvalidWaczError("resources must be set to an non empty array")
+
+            return datapackage
 
     @staticmethod
     def _validate_pages(zip_file: ZipFile):
