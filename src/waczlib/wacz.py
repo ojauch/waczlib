@@ -32,7 +32,7 @@ class WaczArchive:
                 raise InvalidWaczError("wacz_version must be set")
 
             if 'resources' not in datapackage or not isinstance(datapackage['resources'], list) \
-                    or len(datapackage['resources']) == 0:
+                    or not datapackage['resources']:
                 raise InvalidWaczError("resources must be set to an non empty array")
 
             archive_regex = re.compile(r'archive/.+\.warc(\.gz)?')
