@@ -21,14 +21,7 @@ class WaczArchive:
         with self._get_zip() as zip_file:
             files = zip_file.namelist()
 
-            if 'datapackage.json' not in files:
-                raise InvalidWaczError("Does not contain datapackage.json")
-
-            with zip_file.open('datapackage.json') as datapackage_file:
-                try:
-                    datapackage = json.load(datapackage_file)
-                except json.JSONDecodeError:
-                    raise InvalidWaczError("datapackage.json is not a valid JSON file")
+            datapackage = self._get_datapackage()
 
             if 'profile' not in datapackage or datapackage['profile'] != 'data-package':
                 raise InvalidWaczError("profile must be set to 'data-package'")
@@ -66,8 +59,41 @@ class WaczArchive:
         """
         Get metadata from the wacz's datapackage
         :return: WaczMetadata object with the metadata of the archive
+        :raises InvalidWaczError: if the file isn't a valid wacz archive
         """
-        pass
+        datapackage = self._get_datapackage()
+
+        created = None
+        if 'created' in datapackage:
+            try:
+                created = datetime.fromisoformat(datapackage['created'])
+            except ValueError:
+                raise InvalidWaczError('created must be an iso date time string')
+
+        modified = None
+        if 'modified' in datapackage:
+            try:
+                modified = datetime.fromisoformat(datapackage['modified'])
+            except ValueError:
+                raise InvalidWaczError('modified must be an iso date time string')
+
+        main_page_date = None
+        if 'main_page_date' in datapackage:
+            try:
+                main_page_date = datetime.fromisoformat(datapackage['main_page_date'])
+            except ValueError:
+                raise InvalidWaczError('main_page_date must be an iso date time string')
+
+        return WaczMetadata(
+            wacz_version=datapackage['wacz_version'],
+            title=datapackage['title'] if 'title' in datapackage else None,
+            description=datapackage['description'] if 'description' in datapackage else None,
+            created=created,
+            modified=modified,
+            software=datapackage['software'] if 'software' in datapackage else None,
+            main_page_url=datapackage['mainPageUrl'] if 'mainPageUrl' in datapackage else None,
+            main_page_date=main_page_date
+        )
 
     def __repr__(self) -> str:
         return f"WaczArchive(path='{self._path}')"
@@ -79,6 +105,18 @@ class WaczArchive:
             yield zip_file
         finally:
             zip_file.close()
+
+    def _get_datapackage(self) -> dict:
+        with self._get_zip() as zip_file:
+            if 'datapackage.json' not in zip_file.namelist():
+                raise InvalidWaczError("Does not contain datapackage.json")
+
+            with zip_file.open('datapackage.json') as datapackage_file:
+                try:
+                    datapackage = json.load(datapackage_file)
+                    return datapackage
+                except json.JSONDecodeError:
+                    raise InvalidWaczError("datapackage.json is not a valid JSON file")
 
     @staticmethod
     def _validate_pages(zip_file: ZipFile):
@@ -104,8 +142,8 @@ class WaczMetadata:
     created: Optional[datetime]
     modified: Optional[datetime]
     software: Optional[str]
-    mainPageUrl: Optional[str]
-    mainPageDate: Optional[datetime]
+    main_page_url: Optional[str]
+    main_page_date: Optional[datetime]
 
 
 class InvalidWaczError(Exception):

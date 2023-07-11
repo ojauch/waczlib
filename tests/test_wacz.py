@@ -1,5 +1,7 @@
 import pytest
 
+from datetime import datetime
+
 from waczlib.wacz import WaczArchive, InvalidWaczError
 
 
@@ -46,3 +48,20 @@ def test_validate_invalid_pages():
     with pytest.raises(InvalidWaczError) as e_info:
         archive.validate()
     assert e_info.value.reason == "page does not contain url property"
+
+
+def test_get_metadata():
+    archive = WaczArchive("test_assets/valid-example.wacz")
+    metadata = archive.get_metadata()
+
+    assert metadata.wacz_version == '1.1.1'
+    assert metadata.title == 'valid-example'
+    assert metadata.software == 'Webrecorder ArchiveWeb.page 0.10.1, using warcio.js 2.1.0'
+    assert metadata.created == datetime.fromisoformat('2023-07-04T12:25:53.900Z')
+    assert metadata.modified == datetime.fromisoformat('2023-07-04T12:26:05.132Z')
+
+
+def test_get_metadata_invalid():
+    archive = WaczArchive("test_assets/no-datapackage.wacz")
+    with pytest.raises(InvalidWaczError):
+        archive.get_metadata()
