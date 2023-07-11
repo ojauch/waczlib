@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 
@@ -44,8 +45,27 @@ class WaczArchive:
         """
         Check if the checksums of the files in the archive match with the checksums in the datapackage
         :return: dictionary with the paths of the files as keys and True if it is matching or False if not as values
+        :raises InvalidWaczError: if the file isn't a valid wacz archive
         """
-        pass
+        checksums = {}
+
+        datapackage = self._get_datapackage()
+
+        for resource in datapackage['resources']:
+            if 'hash' not in resource:
+                continue
+
+            hash_algo, hash_value = resource['hash'].split(':', 1)
+
+            with self._get_zip() as zip_file:
+                with zip_file.open(resource['path'], 'r') as file:
+                    m = hashlib.new(hash_algo)
+                    m.update(file.read())
+                    calculated_digest = m.hexdigest()
+
+                    checksums[resource['path']] = calculated_digest == hash_value
+
+        return checksums
 
     def get_metadata(self) -> "WaczMetadata":
         """

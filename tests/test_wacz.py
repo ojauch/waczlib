@@ -64,3 +64,18 @@ def test_get_metadata_invalid():
     archive = WaczArchive("test_assets/no-datapackage.wacz")
     with pytest.raises(InvalidWaczError):
         archive.get_metadata()
+
+
+def test_verify_checksums():
+    archive = WaczArchive("test_assets/valid-example.wacz")
+    checksums = archive.verify_checksums()
+
+    for result in checksums.values():
+        assert result
+
+
+def test_verify_checksums_invalid():
+    archive = WaczArchive("test_assets/invalid-checksum.wacz")
+    checksums = archive.verify_checksums()
+
+    assert not checksums['archive/data.warc.gz']
