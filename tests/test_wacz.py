@@ -79,3 +79,30 @@ def test_verify_checksums_invalid():
     checksums = archive.verify_checksums()
 
     assert not checksums['archive/data.warc.gz']
+
+
+def test_get_pages():
+    archive = WaczArchive("test_assets/valid-example.wacz")
+    pages = archive.get_pages()
+
+    assert len(pages) == 1
+
+    first_page = pages[0]
+    assert first_page.title == 'Example Domain'
+    assert first_page.url == 'https://example.org/'
+    assert first_page.id == '49jh9ns3x0sqyifk124fng'
+    assert first_page.size == 2512
+    assert first_page.ts == parse_iso_8601_date("2023-07-04T12:25:55.274Z")
+    assert first_page.text == "Example Domain\nExample Domain\nThis domain is for use in illustrative examples in " \
+                              "documents. You may use this\n    domain in literature without prior coordination or " \
+                              "asking for permission.\nMore information..."
+
+
+def test_get_pages_invalid():
+    archive = WaczArchive("test_assets/no-pages.wacz")
+    with pytest.raises(InvalidWaczError):
+        archive.get_pages()
+
+    archive = WaczArchive("test_assets/invalid-pages.wacz")
+    with pytest.raises(InvalidWaczError):
+        archive.get_pages()

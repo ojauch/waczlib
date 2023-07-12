@@ -4,7 +4,7 @@ import re
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Generator
+from typing import Optional, Dict, Generator, List
 from contextlib import contextmanager
 from zipfile import ZipFile
 
@@ -107,6 +107,33 @@ class WaczArchive:
             main_page_date=main_page_date
         )
 
+    def get_pages(self) -> List["WaczPage"]:
+        pages = []
+
+        with self._get_zip() as zip_file:
+            if 'pages/pages.jsonl' not in zip_file.namelist():
+                raise InvalidWaczError("Does not contain pages/pages.jsonl")
+
+            with zip_file.open('pages/pages.jsonl', 'r') as pages_file:
+                for idx, line in enumerate(pages_file):
+                    if idx == 0:
+                        continue
+
+                    self._validate_page(line)
+                    page_data = json.loads(line)
+
+                    page = WaczPage(
+                        url=page_data['url'],
+                        ts=parse_iso_8601_date(page_data['ts']),
+                        title=page_data['title'] if 'title' in page_data else None,
+                        id=page_data['id'] if 'id' in page_data else None,
+                        text=page_data['text'] if 'text' in page_data else None,
+                        size=page_data['size'] if 'size' in page_data else None
+                    )
+                    pages.append(page)
+
+        return pages
+
     def __repr__(self) -> str:
         return f"WaczArchive(path='{self._path}')"
 
@@ -147,14 +174,17 @@ class WaczArchive:
             for idx, line in enumerate(pages_file.readlines()):
                 if idx == 0:
                     continue
+                WaczArchive._validate_page(line)
 
-                pages = json.loads(line)
+    @staticmethod
+    def _validate_page(page_line: bytes):
+        page = json.loads(page_line)
 
-                if 'url' not in pages:
-                    raise InvalidWaczError('page does not contain url property')
+        if 'url' not in page:
+            raise InvalidWaczError('page does not contain url property')
 
-                if 'ts' not in pages:
-                    raise InvalidWaczError('page does not contain ts property')
+        if 'ts' not in page:
+            raise InvalidWaczError('page does not contain ts property')
 
 
 @dataclass
@@ -167,6 +197,16 @@ class WaczMetadata:
     software: Optional[str]
     main_page_url: Optional[str]
     main_page_date: Optional[datetime]
+
+
+@dataclass
+class WaczPage:
+    url: str
+    ts: datetime
+    title: Optional[str]
+    id: Optional[str]
+    text: Optional[str]
+    size: Optional[int]
 
 
 class InvalidWaczError(Exception):
